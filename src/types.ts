@@ -237,6 +237,15 @@ export class Game {
   }
 }
 
+abstract class State {
+  abstract startVote(): void;
+  abstract playerVote(fromVote: Player, voting: Player): number;
+  abstract setGameWinner(winnerIndex: number): void;
+  abstract endGame(): Map<Player, number>;
+  abstract getUserNameList(): string[][];
+}
+
+
 export class Player {
   private user: Discord.User;
   private points: number;

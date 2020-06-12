@@ -115,6 +115,13 @@ client.on('message', async (message: Discord.Message) => {
             currentMatch.setGameWinner(winnerIndex);
             currentMatch.startVote((result) => {
               message.channel.send('test');
+              message.channel.send(`The mafia is ${result.mafia.discordUser().username}`)
+
+              const resultEmbed = new Discord.MessageEmbed();
+              resultEmbed.setTitle('Game result');
+              const resultArray: string[] = [];
+              result.players.forEach((v, k) => resultArray.push(`${k.discordUser().username}: ${v} points`));
+              resultEmbed.addField('Results', resultArray.join('\n'));
             });
             const players = currentMatch.getPlayers();
             const embed = new Discord.MessageEmbed();
@@ -180,23 +187,6 @@ client.on('message', async (message: Discord.Message) => {
         );
         message.channel.send(embed);
         break;
-      // case 'embedtest':
-      //   const embed = new Discord.MessageEmbed();
-      //   embed.setTitle('Game on!');
-      //   embed.setDescription(
-      //     'A game has been started. All players have received the DM!'
-      //   );
-      //   embed.addFields([
-      //     { name: 'Team A', value: 'Seeeeeeee\nB\nC', inline: true },
-      //     { name: 'Team B', value: 'T\nA\nUeeeeeeee', inline: true },
-      //   ]);
-      //   message.channel.send(embed).then(async (m) => {
-      //     const emotes = ['1️⃣', '2️⃣', '3️⃣', '4️⃣', '5️⃣', '6️⃣'];
-      //     emotes.map(async (e) => await m.react(e));
-      //   });
-      //   break;
-      // case 'dmtest':
-      //   currentPlayer.discordUser().send('Test DM');
       case 'callbacktest':
         test = new CallbackTest();
 
