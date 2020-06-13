@@ -45,6 +45,20 @@ client.on('message', async (message: Discord.Message) => {
           message.channel.send('Match has been disbanded');
         }
         break;
+      case 'players':
+        if (!currentMatch) message.channel.send('There is no ongoing match');
+        else {
+          const embed = new Discord.MessageEmbed();
+          embed.addField(
+            'Current players:',
+            currentMatch
+              .getPlayers()
+              .map((it) => it.discordUser().username)
+              .join('\n')
+          );
+          message.channel.send(embed);
+        }
+        break;
       case 'start':
       case 'remake':
         if (!currentMatch) {
@@ -85,6 +99,11 @@ client.on('message', async (message: Discord.Message) => {
         }
         try {
           currentMatch.addPlayer(currentPlayer);
+          message.channel.send(
+            `Player ${
+              currentPlayer.discordUser().username
+            } has joined the match`
+          );
         } catch (e) {
           if (e instanceof Error) message.channel.send(e.message);
         }
@@ -96,6 +115,9 @@ client.on('message', async (message: Discord.Message) => {
         }
         try {
           currentMatch.removePlayer(currentPlayer);
+          message.channel.send(
+            `Player ${currentPlayer.discordUser().username} left the match`
+          );
         } catch (e) {
           if (e instanceof Error) message.channel.send(e.message);
         }
@@ -196,6 +218,7 @@ client.on('message', async (message: Discord.Message) => {
           'leave',
           'win <team>',
           'remake',
+          'vote <@user>',
           `commands (alias: ${prefix}help)`,
         ];
         embed.setTitle('Commands list');
