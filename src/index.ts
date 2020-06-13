@@ -49,6 +49,7 @@ client.on('message', async (message: Discord.Message) => {
         if (!currentMatch) message.channel.send('There is no ongoing match');
         else {
           const embed = new Discord.MessageEmbed();
+          embed.setDescription('List of players in the match');
           embed.addField(
             'Current players:',
             currentMatch
@@ -99,11 +100,20 @@ client.on('message', async (message: Discord.Message) => {
         }
         try {
           currentMatch.addPlayer(currentPlayer);
-          message.channel.send(
+          const embed = new Discord.MessageEmbed();
+          embed.setDescription(
             `Player ${
               currentPlayer.discordUser().username
             } has joined the match`
           );
+          embed.addField(
+            'Current players:',
+            currentMatch
+              .getPlayers()
+              .map((it) => it.discordUser().username)
+              .join('\n')
+          );
+          message.channel.send(embed);
         } catch (e) {
           if (e instanceof Error) message.channel.send(e.message);
         }
@@ -115,9 +125,18 @@ client.on('message', async (message: Discord.Message) => {
         }
         try {
           currentMatch.removePlayer(currentPlayer);
-          message.channel.send(
-            `Player ${currentPlayer.discordUser().username} left the match`
+          const embed = new Discord.MessageEmbed();
+          embed.setDescription(
+            `Player ${currentPlayer.discordUser().username} has left the match`
           );
+          embed.addField(
+            'Current players:',
+            currentMatch
+              .getPlayers()
+              .map((it) => it.discordUser().username)
+              .join('\n')
+          );
+          message.channel.send(embed);
         } catch (e) {
           if (e instanceof Error) message.channel.send(e.message);
         }
@@ -125,8 +144,7 @@ client.on('message', async (message: Discord.Message) => {
       case 'win':
         if (
           !cmds[1] ||
-          cmds[1].toLowerCase() !== 'a' ||
-          cmds[1].toLowerCase() !== 'b'
+          !(cmds[1].toLowerCase() === 'a' || cmds[1].toLowerCase() === 'b')
         )
           message.channel.send(`Usage: \`${prefix}win <team A/B>\``);
         else if (!currentMatch) {
@@ -135,8 +153,9 @@ client.on('message', async (message: Discord.Message) => {
           const winnerIndex = cmds[1].toLowerCase() === 'a' ? 0 : 1;
           try {
             currentMatch.setGameWinner(winnerIndex);
+            let allVoted = false;
             currentMatch.startVote((result) => {
-              message.channel.send('test');
+              allVoted = true;
               message.channel.send(
                 `The mafia is ${result.mafia.discordUser().username}`
               );
@@ -158,14 +177,10 @@ client.on('message', async (message: Discord.Message) => {
             embed.addField('Players', players.join('\n'));
             await message.channel.send(embed);
 
-            // logic:
-            // either 60 seconds timer is expired
-            // or all players have voted
-
             let counter = 0;
             const interval = setInterval(() => {
               counter++;
-              if (counter === 3) clearInterval(interval);
+              if (counter === 3 || allVoted) clearInterval(interval);
               message.channel.send(
                 `You have ${60 - counter * 15} seconds left`
               );
@@ -187,7 +202,6 @@ client.on('message', async (message: Discord.Message) => {
           message.channel.send('There is no ongoing match');
         } else {
           try {
-            // currentMatch.playerVote(currentPlayer);
             let mention = cmds[1];
             if (mention.startsWith('<@') && mention.endsWith('>')) {
               mention = mention.slice(2, -1);
@@ -216,6 +230,7 @@ client.on('message', async (message: Discord.Message) => {
           'cancel',
           'join',
           'leave',
+          'players',
           'win <team>',
           'remake',
           'vote <@user>',
@@ -228,29 +243,6 @@ client.on('message', async (message: Discord.Message) => {
         );
         message.channel.send(embed);
         break;
-      // case 'callbacktest':
-      //   test = new CallbackTest();
-
-      //   let counter = 0;
-      //   message.channel.send(`You have 20 seconds left`);
-      //   const interval = setInterval(() => {
-      //     counter++;
-      //     if (counter === 3) clearInterval(interval);
-      //     message.channel.send(`You have ${20 - counter * 5} seconds left`);
-      //   }, 5 * 1000);
-
-      //   test.setCallback(() => {
-      //     clearInterval(interval);
-      //     message.channel.send('Callback received');
-      //   });
-
-      //   await sleep(20 * 1000);
-      //   test.doCallback();
-      //   break;
-      // case 'forcecallback':
-      //   if (!test) return;
-      //   test.forceCallback();
-      //   break;
       default:
         return;
     }
