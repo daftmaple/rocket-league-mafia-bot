@@ -3,7 +3,7 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 import Discord from 'discord.js';
-import { Match, Player, PlayerMap } from './types';
+import { Match, PlayerMap } from './types';
 import { CallbackTest } from './test';
 
 const prefix = process.env.BOT_PREFIX || 'm!';
@@ -156,9 +156,6 @@ client.on('message', async (message: Discord.Message) => {
             let allVoted = false;
             currentMatch.startVote((result) => {
               allVoted = true;
-              message.channel.send(
-                `The mafia is ${result.mafia.discordUser().username}`
-              );
 
               const resultEmbed = new Discord.MessageEmbed();
               resultEmbed.setTitle('Game result');
@@ -166,7 +163,18 @@ client.on('message', async (message: Discord.Message) => {
               result.players.forEach((v, k) =>
                 resultArray.push(`${k.discordUser().username}: ${v} points`)
               );
-              resultEmbed.addField('Results', resultArray.join('\n'));
+              resultEmbed.addFields(
+                {
+                  name: 'Mafia',
+                  value: result.mafia.discordUser().username,
+                },
+                {
+                  name: 'Results',
+                  value: resultArray.join('\n'),
+                }
+              );
+
+              message.channel.send(resultEmbed);
             });
             const players = currentMatch.getPlayers();
             const embed = new Discord.MessageEmbed();
@@ -174,7 +182,10 @@ client.on('message', async (message: Discord.Message) => {
             embed.setDescription(
               'Voting ends in 60 seconds or all players have voted'
             );
-            embed.addField('Players', players.join('\n'));
+            embed.addField(
+              'Players',
+              players.map((it) => it.discordUser().username).join('\n')
+            );
             await message.channel.send(embed);
 
             let counter = 0;
@@ -222,6 +233,25 @@ client.on('message', async (message: Discord.Message) => {
           }
         }
         break;
+      case 'points':
+        if (!currentMatch) {
+          message.channel.send('There is no ongoing match');
+        } else {
+          const resultEmbed = new Discord.MessageEmbed();
+          resultEmbed.setTitle('Current standing');
+          const resultArray: string[] = [];
+          idPlayerMapper
+            .getPlayers()
+            .forEach((v, k) =>
+              resultArray.push(
+                `${v.discordUser().username}: ${v.getPoints()} points`
+              )
+            );
+          resultEmbed.addField('Results', resultArray.join('\n'));
+
+          message.channel.send(resultEmbed);
+        }
+        break;
       case 'commands':
       case 'help':
         const embed = new Discord.MessageEmbed();
@@ -231,7 +261,7 @@ client.on('message', async (message: Discord.Message) => {
           'join',
           'leave',
           'players',
-          'win <team>',
+          'win <A / B>',
           'remake',
           'vote <@user>',
           `commands (alias: ${prefix}help)`,

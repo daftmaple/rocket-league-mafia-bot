@@ -101,11 +101,7 @@ export class Match {
   }
 }
 
-export abstract class GameState {
-
-}
-
-export class Game {
+class Game {
   private mafia: Player;
   private others: Player[];
 
@@ -118,6 +114,8 @@ export class Game {
 
   private vote: Map<Player, Player> | null;
   private gameOver: boolean;
+
+  private gameState: State;
 
   constructor(players: Player[]) {
     const arr = Array.from(players);
@@ -138,6 +136,7 @@ export class Game {
 
     this.vote = null;
     this.gameOver = false;
+    this.gameState = new GameStarted();
   }
 
   startVote() {
@@ -245,6 +244,25 @@ abstract class State {
   abstract getUserNameList(): string[][];
 }
 
+class GameStarted implements State {
+  startVote(): void {
+    throw new Error('Method not implemented.');
+  }
+  playerVote(fromVote: Player, voting: Player): number {
+    throw new Error(
+      "Vote hasn't been started yet. Set winner for current game"
+    );
+  }
+  setGameWinner(winnerIndex: number): void {
+    throw new Error('Method not implemented.');
+  }
+  endGame(): Map<Player, number> {
+    throw new Error('Method not implemented.');
+  }
+  getUserNameList(): string[][] {
+    throw new Error('Method not implemented.');
+  }
+}
 
 export class Player {
   private user: Discord.User;
@@ -260,6 +278,10 @@ export class Player {
 
   addPoints(point: number) {
     this.points = this.points + point;
+  }
+
+  getPoints() {
+    return this.points;
   }
 }
 
@@ -277,5 +299,9 @@ export class PlayerMap {
       this.players.set(user.id, p);
       return p;
     }
+  }
+
+  getPlayers() {
+    return this.players;
   }
 }
