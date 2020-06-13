@@ -228,6 +228,11 @@ client.on('message', async (message: Discord.Message) => {
 
             const votedPlayer = idPlayerMapper.addOrFindPlayer(votedUser);
             currentParty.playerVote(currentPlayer, votedPlayer);
+            message.channel.send(
+              `${currentPlayer.discordUser().username} voted for ${
+                votedPlayer.discordUser().username
+              }`
+            );
           } catch (e) {
             if (e instanceof Error) message.channel.send(e.message);
           }
@@ -270,6 +275,9 @@ client.on('message', async (message: Discord.Message) => {
         embed.addField(
           'Commands',
           allcmds.map((it) => `${prefix}${it}`).join('\n')
+        );
+        embed.setFooter(
+          'Want to contribute or give feedback? Create an issue on my GitHub https://github.com/daftmaple/rocket-league-mafia-bot'
         );
         message.channel.send(embed);
         break;
