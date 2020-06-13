@@ -3,13 +3,13 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 import Discord from 'discord.js';
-import { Match, PlayerMap } from './types';
+import { Party, PlayerMap } from './types';
 import { CallbackTest } from './test';
 
 const prefix = process.env.BOT_PREFIX || 'm!';
 
 const idPlayerMapper = new PlayerMap();
-let currentMatch: Match | null = null;
+let currentParty: Party | null = null;
 
 let test: CallbackTest | null = null;
 
@@ -30,29 +30,29 @@ client.on('message', async (message: Discord.Message) => {
     const currentPlayer = idPlayerMapper.addOrFindPlayer(message.author);
     switch (cmds[0]) {
       case 'create':
-        if (currentMatch) message.channel.send('There is an ongoing match');
-        message.channel.send('Creating a match');
-        currentMatch = new Match(message.channel.id, currentPlayer);
+        if (currentParty) message.channel.send('There is an ongoing party');
+        message.channel.send('Creating a party');
+        currentParty = new Party(message.channel.id, currentPlayer);
         break;
       case 'cancel':
-        if (!currentMatch) message.channel.send('There is no ongoing match');
-        else if (currentMatch.ongoingGame())
+        if (!currentParty) message.channel.send('There is no ongoing party');
+        else if (currentParty.ongoingGame())
           message.channel.send('There is an ongoing game');
-        else if (!currentMatch.isLeader(currentPlayer))
+        else if (!currentParty.isLeader(currentPlayer))
           message.channel.send('User is not the party leader');
         else {
-          currentMatch = null;
-          message.channel.send('Match has been disbanded');
+          currentParty = null;
+          message.channel.send('Party has been disbanded');
         }
         break;
       case 'players':
-        if (!currentMatch) message.channel.send('There is no ongoing match');
+        if (!currentParty) message.channel.send('There is no ongoing party');
         else {
           const embed = new Discord.MessageEmbed();
-          embed.setDescription('List of players in the match');
+          embed.setDescription('List of players in the party');
           embed.addField(
             'Current players:',
-            currentMatch
+            currentParty
               .getPlayers()
               .map((it) => it.discordUser().username)
               .join('\n')
@@ -62,12 +62,12 @@ client.on('message', async (message: Discord.Message) => {
         break;
       case 'start':
       case 'remake':
-        if (!currentMatch) {
-          message.channel.send('There is no ongoing match');
+        if (!currentParty) {
+          message.channel.send('There is no ongoing party');
           return;
         }
         try {
-          const game = currentMatch.startGame();
+          const game = currentParty.startGame();
 
           const m = game.getMafia();
           m.discordUser().send('You are the mafia');
@@ -94,21 +94,21 @@ client.on('message', async (message: Discord.Message) => {
         }
         break;
       case 'join':
-        if (!currentMatch) {
-          message.channel.send('There is no ongoing match');
+        if (!currentParty) {
+          message.channel.send('There is no ongoing party');
           return;
         }
         try {
-          currentMatch.addPlayer(currentPlayer);
+          currentParty.addPlayer(currentPlayer);
           const embed = new Discord.MessageEmbed();
           embed.setDescription(
             `Player ${
               currentPlayer.discordUser().username
-            } has joined the match`
+            } has joined the party`
           );
           embed.addField(
             'Current players:',
-            currentMatch
+            currentParty
               .getPlayers()
               .map((it) => it.discordUser().username)
               .join('\n')
@@ -119,19 +119,19 @@ client.on('message', async (message: Discord.Message) => {
         }
         break;
       case 'leave':
-        if (!currentMatch) {
-          message.channel.send('There is no ongoing match');
+        if (!currentParty) {
+          message.channel.send('There is no ongoing party');
           return;
         }
         try {
-          currentMatch.removePlayer(currentPlayer);
+          currentParty.removePlayer(currentPlayer);
           const embed = new Discord.MessageEmbed();
           embed.setDescription(
-            `Player ${currentPlayer.discordUser().username} has left the match`
+            `Player ${currentPlayer.discordUser().username} has left the party`
           );
           embed.addField(
             'Current players:',
-            currentMatch
+            currentParty
               .getPlayers()
               .map((it) => it.discordUser().username)
               .join('\n')
@@ -146,15 +146,15 @@ client.on('message', async (message: Discord.Message) => {
           !cmds[1] ||
           !(cmds[1].toLowerCase() === 'a' || cmds[1].toLowerCase() === 'b')
         )
-          message.channel.send(`Usage: \`${prefix}win <team A/B>\``);
-        else if (!currentMatch) {
-          message.channel.send('There is no ongoing match');
+          message.channel.send(`Usage: \`${prefix}win <A / B>\``);
+        else if (!currentParty) {
+          message.channel.send('There is no ongoing party');
         } else {
           const winnerIndex = cmds[1].toLowerCase() === 'a' ? 0 : 1;
           try {
-            currentMatch.setGameWinner(winnerIndex);
+            currentParty.setGameWinner(winnerIndex);
             let allVoted = false;
-            currentMatch.startVote((result) => {
+            currentParty.startVote((result) => {
               allVoted = true;
 
               const resultEmbed = new Discord.MessageEmbed();
@@ -176,7 +176,7 @@ client.on('message', async (message: Discord.Message) => {
 
               message.channel.send(resultEmbed);
             });
-            const players = currentMatch.getPlayers();
+            const players = currentParty.getPlayers();
             const embed = new Discord.MessageEmbed();
             embed.setTitle('Vote for mafia');
             embed.setDescription(
@@ -200,7 +200,7 @@ client.on('message', async (message: Discord.Message) => {
             await sleep(60 * 1000);
             await message.channel.send('Voting is over');
 
-            currentMatch.endGame();
+            currentParty.endGame();
           } catch (e) {
             if (e instanceof Error) message.channel.send(e.message);
           }
@@ -209,8 +209,8 @@ client.on('message', async (message: Discord.Message) => {
       case 'vote':
         if (!cmds[1]) {
           message.channel.send(`Usage: \`${prefix}vote <@player>\``);
-        } else if (!currentMatch) {
-          message.channel.send('There is no ongoing match');
+        } else if (!currentParty) {
+          message.channel.send('There is no ongoing party');
         } else {
           try {
             let mention = cmds[1];
@@ -227,15 +227,15 @@ client.on('message', async (message: Discord.Message) => {
               throw new Error('The mentioned user does not exist');
 
             const votedPlayer = idPlayerMapper.addOrFindPlayer(votedUser);
-            currentMatch.playerVote(currentPlayer, votedPlayer);
+            currentParty.playerVote(currentPlayer, votedPlayer);
           } catch (e) {
             if (e instanceof Error) message.channel.send(e.message);
           }
         }
         break;
       case 'points':
-        if (!currentMatch) {
-          message.channel.send('There is no ongoing match');
+        if (!currentParty) {
+          message.channel.send('There is no ongoing party');
         } else {
           const resultEmbed = new Discord.MessageEmbed();
           resultEmbed.setTitle('Current standing');

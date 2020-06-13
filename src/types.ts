@@ -7,7 +7,7 @@ export type GameResult = {
 
 export type EndgameCallback = (result: GameResult) => void;
 
-export class Match {
+export class Party {
   private players: Player[];
   private leader: Player;
   private game: Game | null;
@@ -22,7 +22,7 @@ export class Match {
 
   addPlayer(player: Player) {
     if (this.leader === player || this.players.indexOf(player) !== -1) {
-      throw new Error('Player is already in the match');
+      throw new Error('Player is already in the party');
     } else if (this.players.length < 5) {
       this.players.push(player);
     } else {
@@ -37,9 +37,9 @@ export class Match {
   removePlayer(player: Player) {
     if (this.game) throw new Error("Can't remove player when game is still on");
     else if (this.leader === player) {
-      throw new Error("You can't leave your match");
+      throw new Error("You can't leave your party");
     } else if (this.players.indexOf(player) === -1) {
-      throw new Error('Player is not in the match');
+      throw new Error('Player is not in the party');
     } else {
       this.players.splice(this.players.indexOf(player));
     }
@@ -188,6 +188,10 @@ class Game {
         players_points.set(key, players_points.get(key)! + 1);
         players_points.set(value, players_points.get(value)! - 1);
       }
+    });
+
+    players_points.forEach((v, k) => {
+      k.addPoints(v);
     });
 
     return players_points;
