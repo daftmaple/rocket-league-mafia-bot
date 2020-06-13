@@ -115,12 +115,16 @@ client.on('message', async (message: Discord.Message) => {
             currentMatch.setGameWinner(winnerIndex);
             currentMatch.startVote((result) => {
               message.channel.send('test');
-              message.channel.send(`The mafia is ${result.mafia.discordUser().username}`)
+              message.channel.send(
+                `The mafia is ${result.mafia.discordUser().username}`
+              );
 
               const resultEmbed = new Discord.MessageEmbed();
               resultEmbed.setTitle('Game result');
               const resultArray: string[] = [];
-              result.players.forEach((v, k) => resultArray.push(`${k.discordUser().username}: ${v} points`));
+              result.players.forEach((v, k) =>
+                resultArray.push(`${k.discordUser().username}: ${v} points`)
+              );
               resultEmbed.addField('Results', resultArray.join('\n'));
             });
             const players = currentMatch.getPlayers();
@@ -138,11 +142,11 @@ client.on('message', async (message: Discord.Message) => {
 
             let counter = 0;
             const interval = setInterval(() => {
+              counter++;
               if (counter === 3) clearInterval(interval);
               message.channel.send(
                 `You have ${60 - counter * 15} seconds left`
               );
-              counter++;
             }, 15 * 1000);
 
             await sleep(60 * 1000);
@@ -162,7 +166,21 @@ client.on('message', async (message: Discord.Message) => {
         } else {
           try {
             // currentMatch.playerVote(currentPlayer);
-            console.log('test');
+            let mention = cmds[1];
+            if (mention.startsWith('<@') && mention.endsWith('>')) {
+              mention = mention.slice(2, -1);
+
+              if (mention.startsWith('!')) {
+                mention = mention.slice(1);
+              }
+            }
+
+            const votedUser = client.users.cache.get(mention);
+            if (!votedUser)
+              throw new Error('The mentioned user does not exist');
+
+            const votedPlayer = idPlayerMapper.addOrFindPlayer(votedUser);
+            currentMatch.playerVote(currentPlayer, votedPlayer);
           } catch (e) {
             if (e instanceof Error) message.channel.send(e.message);
           }
@@ -187,29 +205,29 @@ client.on('message', async (message: Discord.Message) => {
         );
         message.channel.send(embed);
         break;
-      case 'callbacktest':
-        test = new CallbackTest();
+      // case 'callbacktest':
+      //   test = new CallbackTest();
 
-        let counter = 0;
-        message.channel.send(`You have 20 seconds left`);
-        const interval = setInterval(() => {
-          counter++;
-          if (counter === 3) clearInterval(interval);
-          message.channel.send(`You have ${20 - counter * 5} seconds left`);
-        }, 5 * 1000);
+      //   let counter = 0;
+      //   message.channel.send(`You have 20 seconds left`);
+      //   const interval = setInterval(() => {
+      //     counter++;
+      //     if (counter === 3) clearInterval(interval);
+      //     message.channel.send(`You have ${20 - counter * 5} seconds left`);
+      //   }, 5 * 1000);
 
-        test.setCallback(() => {
-          clearInterval(interval);
-          message.channel.send('Callback received');
-        });
+      //   test.setCallback(() => {
+      //     clearInterval(interval);
+      //     message.channel.send('Callback received');
+      //   });
 
-        await sleep(20 * 1000);
-        test.doCallback();
-        break;
-      case 'forcecallback':
-        if (!test) return;
-        test.forceCallback();
-        break;
+      //   await sleep(20 * 1000);
+      //   test.doCallback();
+      //   break;
+      // case 'forcecallback':
+      //   if (!test) return;
+      //   test.forceCallback();
+      //   break;
       default:
         return;
     }
