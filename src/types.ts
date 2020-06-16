@@ -56,9 +56,9 @@ export class Party {
     return this.game;
   }
 
-  startVote(callback: EndgameCallback) {
+  startVote(winnerIndex: number, callback: EndgameCallback) {
     if (!this.game) throw new Error('There is no ongoing game');
-    this.game.startVote();
+    this.game.startVote(winnerIndex);
     this.callback = callback;
   }
 
@@ -73,11 +73,6 @@ export class Party {
     if (c >= this.players.length + 1) {
       this.endGame();
     }
-  }
-
-  setGameWinner(winnerIndex: number) {
-    if (!this.game) throw new Error('There is no ongoing game');
-    this.game.setGameWinner(winnerIndex);
   }
 
   endGame() {
@@ -111,12 +106,12 @@ class Game {
 
   private mafiaIndex: number | null;
   private winnerIndex: number | null;
-  private userNameList: string[][] | null;
+  private userNameList: string[][];
 
   private vote: Map<Player, Player> | null;
   private gameOver: boolean;
 
-  private gameState: State;
+  // private gameState: State;
 
   constructor(players: Player[]) {
     const arr = Array.from(players);
@@ -131,18 +126,31 @@ class Game {
     this.teamMafia.push(withMafia2);
 
     this.teamNotMafia = arr;
-    this.mafiaIndex = null;
-    this.winnerIndex = null;
-    this.userNameList = null;
 
+    const teamMafiaUserString = this.teamMafia.map(
+      (it) => it.discordUser().username
+    );
+    const teamOthersUserString = this.teamNotMafia.map(
+      (it) => it.discordUser().username
+    );
+
+    this.shuffleArray(teamMafiaUserString);
+    this.shuffleArray(teamOthersUserString);
+
+    this.userNameList = [teamMafiaUserString, teamOthersUserString];
+    this.shuffleArray(this.userNameList);
+    this.mafiaIndex = this.userNameList.indexOf(teamMafiaUserString);
+
+    this.winnerIndex = null;
     this.vote = null;
     this.gameOver = false;
-    this.gameState = new GameStarted();
+    // this.gameState = new StartedState();
   }
 
-  startVote() {
+  startVote(winnerIndex: number) {
     if (!!this.vote) throw new Error('Vote has been started');
     this.vote = new Map();
+    this.winnerIndex = winnerIndex;
   }
 
   playerVote(fromVote: Player, voting: Player) {
@@ -153,11 +161,6 @@ class Game {
       );
     this.vote.set(fromVote, voting);
     return this.vote.size;
-  }
-
-  setGameWinner(winnerIndex: number) {
-    if (!this.mafiaIndex) throw new Error("Game hasn't started yet");
-    this.winnerIndex = winnerIndex;
   }
 
   // Do points calculation
@@ -207,24 +210,6 @@ class Game {
   }
 
   getUserNameList() {
-    if (this.userNameList) return this.userNameList;
-    else if (!!this.vote)
-      throw new Error('Vote for a game is currently running');
-
-    const teamMafiaUserString = this.teamMafia.map(
-      (it) => it.discordUser().username
-    );
-    const teamOthersUserString = this.teamNotMafia.map(
-      (it) => it.discordUser().username
-    );
-
-    this.shuffleArray(teamMafiaUserString);
-    this.shuffleArray(teamOthersUserString);
-
-    this.userNameList = [teamMafiaUserString, teamOthersUserString];
-    this.shuffleArray(this.userNameList);
-    this.mafiaIndex = this.userNameList.indexOf(teamMafiaUserString);
-
     return this.userNameList;
   }
 
@@ -241,33 +226,36 @@ class Game {
   }
 }
 
-abstract class State {
-  abstract startVote(): void;
-  abstract playerVote(fromVote: Player, voting: Player): number;
-  abstract setGameWinner(winnerIndex: number): void;
-  abstract endGame(): Map<Player, number>;
-  abstract getUserNameList(): string[][];
-}
+// abstract class State {
+//   // Set game winner happens before vote
+//   abstract setGameWinner(): void;
+//   abstract playerVote(): void;
+//   abstract endGame(): void;
+// }
 
-class GameStarted implements State {
-  startVote(): void {
-    throw new Error('Method not implemented.');
-  }
-  playerVote(fromVote: Player, voting: Player): number {
-    throw new Error(
-      "Vote hasn't been started yet. Set winner for current game"
-    );
-  }
-  setGameWinner(winnerIndex: number): void {
-    throw new Error('Method not implemented.');
-  }
-  endGame(): Map<Player, number> {
-    throw new Error('Method not implemented.');
-  }
-  getUserNameList(): string[][] {
-    throw new Error('Method not implemented.');
-  }
-}
+// class StartedState implements State {
+//   setGameWinner(): void {
+//     return;
+//   }
+//   playerVote(): void {
+//     throw new Error('Method not implemented.');
+//   }
+//   endGame(): void {
+//     throw new Error('Method not implemented.');
+//   }
+// }
+
+// class VotingState implements State {
+//   setGameWinner(): void {
+//     throw new Error('Method not implemented.');
+//   }
+//   playerVote(): void {
+//     return;
+//   }
+//   endGame(): void {
+//     return;
+//   }
+// }
 
 export class Player {
   private user: Discord.User;

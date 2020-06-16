@@ -152,9 +152,8 @@ client.on('message', async (message: Discord.Message) => {
         } else {
           const winnerIndex = cmds[1].toLowerCase() === 'a' ? 0 : 1;
           try {
-            currentParty.setGameWinner(winnerIndex);
             let allVoted = false;
-            currentParty.startVote((result) => {
+            currentParty.startVote(winnerIndex, (result) => {
               allVoted = true;
 
               const resultEmbed = new Discord.MessageEmbed();
@@ -256,6 +255,9 @@ client.on('message', async (message: Discord.Message) => {
 
           message.channel.send(resultEmbed);
         }
+        break;
+      case 'restart':
+        currentParty = null;
         break;
       case 'commands':
       case 'help':

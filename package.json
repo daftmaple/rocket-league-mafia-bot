@@ -1,13 +1,14 @@
 {
   "name": "rocket-league-mafia-bot",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "main": "index.js",
   "license": "MIT",
   "scripts": {
     "start": "node build/index.js",
     "watch": "yarn tsc --watch",
     "build": "yarn tsc",
-    "clean": "rm -rf build/"
+    "clean": "rm -rf build/",
+    "rebuild": "yarn clean && yarn build"
   },
   "dependencies": {
     "@types/node": "^14.0.11",
