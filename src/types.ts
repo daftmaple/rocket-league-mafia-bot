@@ -62,10 +62,6 @@ export class Party {
     this.callback = callback;
   }
 
-  getGame() {
-    return this.game;
-  }
-
   playerVote(fromVote: Player, voting: Player) {
     if (!this.game) throw new Error('There is no ongoing game');
     if (fromVote === voting) throw new Error("You can't vote for yourself");
@@ -108,10 +104,9 @@ class Game {
   private winnerIndex: number | null;
   private userNameList: string[][];
 
-  private vote: Map<Player, Player> | null;
-  private gameOver: boolean;
+  private vote: Map<Player, Player>;
 
-  // private gameState: State;
+  private gameState: State;
 
   constructor(players: Player[]) {
     const arr = Array.from(players);
@@ -142,35 +137,27 @@ class Game {
     this.mafiaIndex = this.userNameList.indexOf(teamMafiaUserString);
 
     this.winnerIndex = null;
-    this.vote = null;
-    this.gameOver = false;
-    // this.gameState = new StartedState();
+    this.vote = new Map();
+
+    this.gameState = new StartedState();
   }
 
   startVote(winnerIndex: number) {
-    if (!!this.vote) throw new Error('Vote has been started');
-    this.vote = new Map();
+    this.gameState.startVote();
     this.winnerIndex = winnerIndex;
+
+    this.gameState = new VotingState();
   }
 
   playerVote(fromVote: Player, voting: Player) {
-    if (this.gameOver) throw new Error('Game is already finished');
-    if (!this.vote)
-      throw new Error(
-        "Vote hasn't been started yet. Set winner for current game"
-      );
+    this.gameState.playerVote();
     this.vote.set(fromVote, voting);
     return this.vote.size;
   }
 
   // Do points calculation
   endGame(): Map<Player, number> {
-    if (this.gameOver) throw new Error('Game has ended');
-    else if (!this.vote)
-      throw new Error(
-        "Vote hasn't been started yet. Set winner for current game"
-      );
-    this.gameOver = true;
+    this.gameState.endGame();
 
     /*
     the point system should be 3 points for mafia if he loses 
@@ -213,11 +200,6 @@ class Game {
     return this.userNameList;
   }
 
-  getMafiaIndex() {
-    if (!this.mafiaIndex) this.getUserNameList();
-    return this.mafiaIndex!;
-  }
-
   private shuffleArray(array: any) {
     for (let i = array.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
@@ -226,36 +208,36 @@ class Game {
   }
 }
 
-// abstract class State {
-//   // Set game winner happens before vote
-//   abstract setGameWinner(): void;
-//   abstract playerVote(): void;
-//   abstract endGame(): void;
-// }
+abstract class State {
+  // Set game winner happens before vote
+  abstract startVote(): void;
+  abstract playerVote(): void;
+  abstract endGame(): void;
+}
 
-// class StartedState implements State {
-//   setGameWinner(): void {
-//     return;
-//   }
-//   playerVote(): void {
-//     throw new Error('Method not implemented.');
-//   }
-//   endGame(): void {
-//     throw new Error('Method not implemented.');
-//   }
-// }
+class StartedState implements State {
+  startVote(): void {
+    return;
+  }
+  playerVote(): void {
+    throw new Error('Method not implemented.');
+  }
+  endGame(): void {
+    throw new Error('Method not implemented.');
+  }
+}
 
-// class VotingState implements State {
-//   setGameWinner(): void {
-//     throw new Error('Method not implemented.');
-//   }
-//   playerVote(): void {
-//     return;
-//   }
-//   endGame(): void {
-//     return;
-//   }
-// }
+class VotingState implements State {
+  startVote(): void {
+    throw new Error('Method not implemented.');
+  }
+  playerVote(): void {
+    return;
+  }
+  endGame(): void {
+    return;
+  }
+}
 
 export class Player {
   private user: Discord.User;
