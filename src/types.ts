@@ -41,7 +41,7 @@ export class Party {
     } else if (this.players.indexOf(player) === -1) {
       throw new Error('Player is not in the party');
     } else {
-      this.players.splice(this.players.indexOf(player));
+      this.players.splice(this.players.indexOf(player), 1);
     }
   }
 
