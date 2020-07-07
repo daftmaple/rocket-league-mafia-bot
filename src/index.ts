@@ -284,9 +284,7 @@ client.on('message', async (message: Discord.Message) => {
         message.channel.send(embed);
         break;
       case 'version':
-        message.channel.send(
-          `Current version: ${process.env.npm_package_version}`
-        );
+        message.channel.send(`Current version: 1.0.5`);
         break;
       default:
         return;

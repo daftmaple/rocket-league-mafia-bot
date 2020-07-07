@@ -171,7 +171,22 @@ class Game {
       this.mafia,
       this.winnerIndex! !== this.mafiaIndex! ? 3 : 0
     );
-    this.others.forEach((it) => players_points.set(it, 0));
+    this.others.forEach((it) => {
+      // If non-mafia wins, they will get 1 point
+      // Find player in teamMafia, because !!find will be true/false
+      // If player in teamMafia and winnerIndex === mafiaIndex, set point to 1, otherwise 0
+      // Else (!player in teamMafia) and winnerIndex !== mafiaIndex, set point to 1 otherwise 0
+      players_points.set(
+        it,
+        !!this.teamMafia.find((player) => player === it)
+          ? this.winnerIndex === this.mafiaIndex
+            ? 1
+            : 0
+          : this.winnerIndex !== this.mafiaIndex
+          ? 1
+          : 0
+      );
+    });
 
     // Set the points based on correct vote
     this.vote!.forEach((value, key) => {
@@ -220,16 +235,16 @@ class StartedState implements State {
     return;
   }
   playerVote(): void {
-    throw new Error('Method not implemented.');
+    throw new Error('Winner must be set first.');
   }
   endGame(): void {
-    throw new Error('Method not implemented.');
+    throw new Error('Winner must be set first.');
   }
 }
 
 class VotingState implements State {
   startVote(): void {
-    throw new Error('Method not implemented.');
+    throw new Error('Vote is already started.');
   }
   playerVote(): void {
     return;
