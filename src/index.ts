@@ -9,7 +9,7 @@ import { CallbackTest } from './test';
 const prefix = process.env.BOT_PREFIX || 'm!';
 
 const idPlayerMapper = new PlayerMap();
-let currentParty: Party | null = null;
+let partyMap: Map<String, Party> = new Map();
 
 let test: CallbackTest | null = null;
 
@@ -28,31 +28,39 @@ client.on('message', async (message: Discord.Message) => {
     if (!(message.channel instanceof Discord.TextChannel)) return;
 
     const currentPlayer = idPlayerMapper.addOrFindPlayer(message.author);
+    const channel = message.channel.id;
+
     switch (cmds[0]) {
       case 'create':
-        if (currentParty) message.channel.send('There is an ongoing party');
-        message.channel.send('Creating a party');
-        currentParty = new Party(message.channel.id, currentPlayer);
+        if (!!partyMap.get(channel)) {
+          message.channel.send('There is an ongoing party in this channel');
+          return;
+        }
+        message.channel.send('Creating a party for this channel');
+        partyMap.set(channel, new Party(message.channel.id, currentPlayer));
         break;
       case 'cancel':
-        if (!currentParty) message.channel.send('There is no ongoing party');
-        else if (currentParty.ongoingGame())
+        if (!partyMap.get(channel)) {
+          message.channel.send('There is no ongoing party in this channel');
+        } else if (partyMap.get(channel)!.ongoingGame())
           message.channel.send('There is an ongoing game');
-        else if (!currentParty.isLeader(currentPlayer))
+        else if (!partyMap.get(channel)!.isLeader(currentPlayer))
           message.channel.send('User is not the party leader');
         else {
-          currentParty = null;
+          partyMap.delete(channel);
           message.channel.send('Party has been disbanded');
         }
         break;
       case 'players':
-        if (!currentParty) message.channel.send('There is no ongoing party');
+        if (!partyMap.get(channel))
+          message.channel.send('There is no ongoing party in this channel');
         else {
           const embed = new Discord.MessageEmbed();
           embed.setDescription('List of players in the party');
           embed.addField(
             'Current players:',
-            currentParty
+            partyMap
+              .get(channel)!
               .getPlayers()
               .map((it) => it.discordUser().username)
               .join('\n')
@@ -62,12 +70,12 @@ client.on('message', async (message: Discord.Message) => {
         break;
       case 'start':
       case 'remake':
-        if (!currentParty) {
-          message.channel.send('There is no ongoing party');
+        if (!partyMap.get(channel)) {
+          message.channel.send('There is no ongoing party in this channel');
           return;
         }
         try {
-          const game = currentParty.startGame();
+          const game = partyMap.get(channel)!.startGame();
 
           const m = game.getMafia();
           m.discordUser().send('You are the mafia');
@@ -94,12 +102,12 @@ client.on('message', async (message: Discord.Message) => {
         }
         break;
       case 'join':
-        if (!currentParty) {
-          message.channel.send('There is no ongoing party');
+        if (!partyMap.get(channel)) {
+          message.channel.send('There is no ongoing party in this channel');
           return;
         }
         try {
-          currentParty.addPlayer(currentPlayer);
+          partyMap.get(channel)!.addPlayer(currentPlayer);
           const embed = new Discord.MessageEmbed();
           embed.setDescription(
             `Player ${
@@ -108,7 +116,8 @@ client.on('message', async (message: Discord.Message) => {
           );
           embed.addField(
             'Current players:',
-            currentParty
+            partyMap
+              .get(channel)!
               .getPlayers()
               .map((it) => it.discordUser().username)
               .join('\n')
@@ -119,19 +128,20 @@ client.on('message', async (message: Discord.Message) => {
         }
         break;
       case 'leave':
-        if (!currentParty) {
-          message.channel.send('There is no ongoing party');
+        if (!partyMap.get(channel)) {
+          message.channel.send('There is no ongoing party in this channel');
           return;
         }
         try {
-          currentParty.removePlayer(currentPlayer);
+          partyMap.get(channel)!.removePlayer(currentPlayer);
           const embed = new Discord.MessageEmbed();
           embed.setDescription(
             `Player ${currentPlayer.discordUser().username} has left the party`
           );
           embed.addField(
             'Current players:',
-            currentParty
+            partyMap
+              .get(channel)!
               .getPlayers()
               .map((it) => it.discordUser().username)
               .join('\n')
@@ -147,13 +157,13 @@ client.on('message', async (message: Discord.Message) => {
           !(cmds[1].toLowerCase() === 'a' || cmds[1].toLowerCase() === 'b')
         )
           message.channel.send(`Usage: \`${prefix}win <A / B>\``);
-        else if (!currentParty) {
-          message.channel.send('There is no ongoing party');
+        else if (!partyMap.get(channel)) {
+          message.channel.send('There is no ongoing party in this channel');
         } else {
           const winnerIndex = cmds[1].toLowerCase() === 'a' ? 0 : 1;
           try {
             let allVoted = false;
-            currentParty.startVote(winnerIndex, (result) => {
+            partyMap.get(channel)!.startVote(winnerIndex, (result) => {
               allVoted = true;
 
               const resultEmbed = new Discord.MessageEmbed();
@@ -175,7 +185,7 @@ client.on('message', async (message: Discord.Message) => {
 
               message.channel.send(resultEmbed);
             });
-            const players = currentParty.getPlayers();
+            const players = partyMap.get(channel)!.getPlayers();
             const embed = new Discord.MessageEmbed();
             embed.setTitle('Vote for mafia');
             embed.setDescription(
@@ -199,7 +209,7 @@ client.on('message', async (message: Discord.Message) => {
             await sleep(60 * 1000);
             await message.channel.send('Voting is over');
 
-            currentParty.endGame();
+            partyMap.get(channel)!.endGame();
           } catch (e) {
             if (e instanceof Error) message.channel.send(e.message);
           }
@@ -208,7 +218,7 @@ client.on('message', async (message: Discord.Message) => {
       case 'vote':
         if (!cmds[1]) {
           message.channel.send(`Usage: \`${prefix}vote <@player>\``);
-        } else if (!currentParty) {
+        } else if (!partyMap.get(channel)) {
           message.channel.send('There is no ongoing party');
         } else {
           try {
@@ -226,7 +236,7 @@ client.on('message', async (message: Discord.Message) => {
               throw new Error('The mentioned user does not exist');
 
             const votedPlayer = idPlayerMapper.addOrFindPlayer(votedUser);
-            currentParty.playerVote(currentPlayer, votedPlayer);
+            partyMap.get(channel)!.playerVote(currentPlayer, votedPlayer);
             message.channel.send(
               `${currentPlayer.discordUser().username} voted for ${
                 votedPlayer.discordUser().username
@@ -238,7 +248,7 @@ client.on('message', async (message: Discord.Message) => {
         }
         break;
       case 'points':
-        if (!currentParty) {
+        if (!partyMap.get(channel)) {
           message.channel.send('There is no ongoing party');
         } else {
           const resultEmbed = new Discord.MessageEmbed();
@@ -257,7 +267,9 @@ client.on('message', async (message: Discord.Message) => {
         }
         break;
       case 'restart':
-        currentParty = null;
+        if (message.author.id !== process.env.BOT_ADMIN)
+          message.channel.send('You are not the superadmin of the bot');
+        else partyMap = new Map();
         break;
       case 'commands':
       case 'help':
@@ -284,7 +296,7 @@ client.on('message', async (message: Discord.Message) => {
         message.channel.send(embed);
         break;
       case 'version':
-        message.channel.send(`Current version: 1.0.5`);
+        message.channel.send(`Current version: 1.1.0`);
         break;
       default:
         return;

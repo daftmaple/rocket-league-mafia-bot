@@ -139,14 +139,16 @@ class Game {
     this.winnerIndex = null;
     this.vote = new Map();
 
-    this.gameState = new StartedState();
+    this.gameState = new StartedState(this);
+  }
+
+  setState(state: State) {
+    this.gameState = state;
   }
 
   startVote(winnerIndex: number) {
     this.gameState.startVote();
     this.winnerIndex = winnerIndex;
-
-    this.gameState = new VotingState();
   }
 
   playerVote(fromVote: Player, voting: Player) {
@@ -231,7 +233,12 @@ abstract class State {
 }
 
 class StartedState implements State {
+  private game: Game;
+  constructor(game: Game) {
+    this.game = game;
+  }
   startVote(): void {
+    this.game.setState(new VotingState(this.game));
     return;
   }
   playerVote(): void {
@@ -243,11 +250,32 @@ class StartedState implements State {
 }
 
 class VotingState implements State {
+  private game: Game;
+  constructor(game: Game) {
+    this.game = game;
+  }
   startVote(): void {
     throw new Error('Vote is already started.');
   }
   playerVote(): void {
     return;
+  }
+  endGame(): void {
+    this.game.setState(new EndedState(this.game));
+    return;
+  }
+}
+
+class EndedState implements State {
+  private game: Game;
+  constructor(game: Game) {
+    this.game = game;
+  }
+  startVote(): void {
+    throw new Error('Game has ended.');
+  }
+  playerVote(): void {
+    throw new Error('Game has ended.');
   }
   endGame(): void {
     return;
