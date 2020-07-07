@@ -51,6 +51,7 @@ client.on('message', async (message: Discord.Message) => {
           message.channel.send('Party has been disbanded');
         }
         break;
+      case 'player':
       case 'players':
         if (!partyMap.get(channel))
           message.channel.send('There is no ongoing party in this channel');
@@ -201,9 +202,10 @@ client.on('message', async (message: Discord.Message) => {
             const interval = setInterval(() => {
               counter++;
               if (counter === 3 || allVoted) clearInterval(interval);
-              message.channel.send(
-                `You have ${60 - counter * 15} seconds left`
-              );
+              else
+                message.channel.send(
+                  `You have ${60 - counter * 15} seconds left`
+                );
             }, 15 * 1000);
 
             await sleep(60 * 1000);
@@ -248,23 +250,19 @@ client.on('message', async (message: Discord.Message) => {
         }
         break;
       case 'points':
-        if (!partyMap.get(channel)) {
-          message.channel.send('There is no ongoing party');
-        } else {
-          const resultEmbed = new Discord.MessageEmbed();
-          resultEmbed.setTitle('Current standing');
-          const resultArray: string[] = [];
-          idPlayerMapper
-            .getPlayers()
-            .forEach((v, k) =>
-              resultArray.push(
-                `${v.discordUser().username}: ${v.getPoints()} points`
-              )
-            );
-          resultEmbed.addField('Results', resultArray.join('\n'));
+        const resultEmbed = new Discord.MessageEmbed();
+        resultEmbed.setTitle('Current standing');
+        const resultArray: string[] = [];
+        idPlayerMapper
+          .getPlayers()
+          .forEach((v, k) =>
+            resultArray.push(
+              `${v.discordUser().username}: ${v.getPoints()} points`
+            )
+          );
+        resultEmbed.addField('Results', resultArray.join('\n'));
 
-          message.channel.send(resultEmbed);
-        }
+        message.channel.send(resultEmbed);
         break;
       case 'restart':
         if (message.author.id !== process.env.BOT_ADMIN)
@@ -296,7 +294,7 @@ client.on('message', async (message: Discord.Message) => {
         message.channel.send(embed);
         break;
       case 'version':
-        message.channel.send(`Current version: 1.1.0`);
+        message.channel.send(`Current version: 1.1.1`);
         break;
       default:
         return;
