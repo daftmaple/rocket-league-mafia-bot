@@ -301,7 +301,10 @@ client.on('message', async (message: Discord.Message) => {
       case 'restart':
         if (botAdmin.indexOf(message.author.id) < 0)
           message.channel.send('You are not the superadmin of the bot');
-        else partyMap = new Map();
+        else {
+          partyMap = new Map();
+          message.channel.send('Bot has been restarted');
+        }
         break;
       case 'commands':
       case 'help':
