@@ -4,14 +4,13 @@ dotenv.config();
 
 import Discord from 'discord.js';
 import { Party, PlayerMap } from './types';
-import { CallbackTest } from './test';
 
 const prefix = process.env.BOT_PREFIX || 'm!';
 
+const botAdmin = (process.env.BOT_ADMIN || '').split(',');
+
 const idPlayerMapper = new PlayerMap();
 let partyMap: Map<String, Party> = new Map();
-
-let test: CallbackTest | null = null;
 
 const client: Discord.Client = new Discord.Client({
   retryLimit: 3,
@@ -112,7 +111,7 @@ client.on('message', async (message: Discord.Message) => {
           const embed = new Discord.MessageEmbed();
           embed.setDescription(
             `Player ${
-              currentPlayer.discordUser().username
+            currentPlayer.discordUser().username
             } has joined the party`
           );
           embed.addField(
@@ -241,8 +240,43 @@ client.on('message', async (message: Discord.Message) => {
             partyMap.get(channel)!.playerVote(currentPlayer, votedPlayer);
             message.channel.send(
               `${currentPlayer.discordUser().username} voted for ${
-                votedPlayer.discordUser().username
+              votedPlayer.discordUser().username
               }`
+            );
+          } catch (e) {
+            if (e instanceof Error) message.channel.send(e.message);
+          }
+        }
+        break;
+      case 'kick':
+        if (!cmds[1]) {
+          message.channel.send(`Usage: \`${prefix}kick <@player>\``);
+        } else if (!partyMap.get(channel)) {
+          message.channel.send('There is no ongoing party');
+        } else {
+          const party = partyMap.get(channel)!;
+          if (!party.isLeader(currentPlayer)) {
+            message.channel.send('User is not party leader for this channel');
+            return;
+          }
+          try {
+            let mention = cmds[1];
+            if (mention.startsWith('<@') && mention.endsWith('>')) {
+              mention = mention.slice(2, -1);
+
+              if (mention.startsWith('!')) {
+                mention = mention.slice(1);
+              }
+            }
+
+            const mentionedUser = client.users.cache.get(mention);
+            if (!mentionedUser)
+              throw new Error('The mentioned user does not exist');
+
+            const mentionedPlayer = idPlayerMapper.addOrFindPlayer(mentionedUser);
+            party.removePlayer(mentionedPlayer);
+            message.channel.send(
+              `User ${mentionedPlayer.discordUser().username} has been removed from current party`
             );
           } catch (e) {
             if (e instanceof Error) message.channel.send(e.message);
@@ -265,7 +299,7 @@ client.on('message', async (message: Discord.Message) => {
         message.channel.send(resultEmbed);
         break;
       case 'restart':
-        if (message.author.id !== process.env.BOT_ADMIN)
+        if (botAdmin.indexOf(message.author.id) < 0)
           message.channel.send('You are not the superadmin of the bot');
         else partyMap = new Map();
         break;
@@ -282,6 +316,7 @@ client.on('message', async (message: Discord.Message) => {
           'remake',
           'vote <@user>',
           `commands (alias: ${prefix}help)`,
+          'kick <@user>'
         ];
         embed.setTitle('Commands list');
         embed.addField(
@@ -309,3 +344,13 @@ function sleep(ms: number) {
 }
 
 client.login(process.env.BOT_TOKEN!);
+
+client.on('ready', () => {
+  if (client.user)
+    client.user.setPresence({
+      activity: {
+        name: `${prefix}help | version ${process.env.npm_package_version}`,
+        type: 'LISTENING',
+      },
+    });
+});
