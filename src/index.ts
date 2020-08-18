@@ -332,7 +332,7 @@ client.on('message', async (message: Discord.Message) => {
         message.channel.send(embed);
         break;
       case 'version':
-        message.channel.send(`Current version: 1.1.1`);
+        message.channel.send(`Current version: ${process.env.npm_package_version}`);
         break;
       default:
         return;
