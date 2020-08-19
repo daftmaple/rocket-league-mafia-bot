@@ -1,4 +1,5 @@
 import Discord from 'discord.js';
+import moment from 'moment';
 
 export type GameResult = {
   players: Map<Player, number>;
@@ -12,12 +13,14 @@ export class Party {
   private leader: Player;
   private game: Game | null;
   private callback: EndgameCallback | null;
+  private lastAction: Date;
 
   constructor(channel: string, leader: Player) {
     this.players = [];
     this.leader = leader;
     this.game = null;
     this.callback = null;
+    this.lastAction = new Date();
   }
 
   addPlayer(player: Player) {
@@ -28,6 +31,7 @@ export class Party {
     } else {
       throw new Error('Team is full');
     }
+    this.lastAction = new Date();
   }
 
   getPlayers() {
@@ -43,6 +47,7 @@ export class Party {
     } else {
       this.players.splice(this.players.indexOf(player), 1);
     }
+    this.lastAction = new Date();
   }
 
   startGame() {
@@ -53,6 +58,7 @@ export class Party {
         `Not enough players (currently ${this.players.length + 1} players)`
       );
     this.game = new Game([...this.players, this.leader]);
+    this.lastAction = new Date();
     return this.game;
   }
 
@@ -82,10 +88,42 @@ export class Party {
       mafia: m,
     };
     this.callback!(result);
+
+    this.lastAction = new Date();
   }
 
   ongoingGame() {
     return !!this.game;
+  }
+
+  // Party is cancellable if no ongoing game and last action was more than 10 minutes ago
+  cancellable(): boolean {
+    return (
+      !this.game &&
+      new Date().getTime() - this.lastAction.getTime() > 10 * 60 * 1000
+    );
+  }
+
+  whenLastActive(): string {
+    const endMoment = moment(new Date());
+    const startMoment = moment(this.lastAction);
+
+    const d = endMoment.diff(startMoment, 'days');
+    startMoment.add(d, 'days');
+    const h = endMoment.diff(startMoment, 'hours');
+    startMoment.add(h, 'hours');
+    const min = endMoment.diff(startMoment, 'minutes');
+    startMoment.add(min, 'minutes');
+    const s = endMoment.diff(startMoment, 'seconds');
+    startMoment.add(s, 'seconds');
+
+    const sep = [];
+    d && sep.push(d === 1 ? '1 day' : `${d} days`);
+    h && sep.push(h === 1 ? '1 hour' : `${h} hours`);
+    min && sep.push(min === 1 ? '1 minute' : `${min} minutes`);
+    s && sep.push(s === 1 ? '1 second' : `${s} seconds`);
+
+    return sep.join(', ');
   }
 
   isLeader(player: Player) {
