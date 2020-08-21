@@ -70,9 +70,9 @@ export class Party {
 
   playerVote(fromVote: Player, voting: Player) {
     if (!this.game) throw new Error('There is no ongoing game');
-    if (this.players.indexOf(fromVote) < 0)
+    if (this.getPlayers().indexOf(fromVote) < 0)
       throw new Error('You are not in the party');
-    if (this.players.indexOf(voting) < 0)
+    if (this.getPlayers().indexOf(voting) < 0)
       throw new Error('The player that you voted is not in the party');
     if (fromVote === voting) throw new Error("You can't vote for yourself");
     const c = this.game.playerVote(fromVote, voting);
