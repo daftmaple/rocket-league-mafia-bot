@@ -229,13 +229,12 @@ client.on('message', async (message: Discord.Message) => {
                 );
             }, 15 * 1000);
 
-            async () => {
-              await sleep(60 * 1000);
+            setTimeout(() => {
               if (!allVoted) {
                 message.channel.send('Voting is over');
                 party.endGame();
               }
-            };
+            }, 60 * 1000);
           } catch (e) {
             if (e instanceof Error) message.channel.send(e.message);
           }
@@ -384,6 +383,44 @@ client.on('message', async (message: Discord.Message) => {
         message.channel.send(
           'Invite for this bot is disabled. Please ask bot operator for invite.'
         );
+        break;
+      case 'changelog':
+        const changelogs = new Discord.MessageEmbed();
+        changelogs.setTitle('Recent changelogs');
+        changelogs.addFields([
+          {
+            name: 'Version 1.2.0',
+            value: `
+            - Allow user to cancel if a party is cancellable
+(inactive for more than 10 minutes)
+            - Added game rule
+            - (Internal change) slightly modify party handling
+            `,
+          },
+          {
+            name: 'Version 1.2.1',
+            value: `
+            - As server admin, you can cancel party forcefully using -f option
+            - Bugfix where someone can vote without being in the party
+            `,
+          },
+          {
+            name: 'Version 1.2.2',
+            value: `
+            Internal minor bugfix where party leader can't vote
+            `,
+          },
+          {
+            name: 'Version 1.2.3',
+            value: `
+            Internal minor bugfix where game doesn't end after 60 seconds
+            `,
+          },
+        ]);
+        changelogs.setFooter(
+          `Check this bot on my GitHub https://github.com/daftmaple/rocket-league-mafia-bot`
+        );
+        message.channel.send(changelogs);
         break;
       default:
         return;
