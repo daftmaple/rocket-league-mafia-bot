@@ -24,7 +24,7 @@ export class Party {
   }
 
   addPlayer(player: Player) {
-    if (this.leader === player || this.players.indexOf(player) !== -1) {
+    if (this.leader === player || this.players.indexOf(player) >= 0) {
       throw new Error('Player is already in the party');
     } else if (this.players.length < 5) {
       this.players.push(player);
@@ -42,7 +42,7 @@ export class Party {
     if (this.game) throw new Error("Can't remove player when game is still on");
     else if (this.leader === player) {
       throw new Error("You can't leave your party");
-    } else if (this.players.indexOf(player) === -1) {
+    } else if (this.players.indexOf(player) < 0) {
       throw new Error('Player is not in the party');
     } else {
       this.players.splice(this.players.indexOf(player), 1);
@@ -70,6 +70,10 @@ export class Party {
 
   playerVote(fromVote: Player, voting: Player) {
     if (!this.game) throw new Error('There is no ongoing game');
+    if (this.players.indexOf(fromVote) < 0)
+      throw new Error('You are not in the party');
+    if (this.players.indexOf(voting) < 0)
+      throw new Error('The player that you voted is not in the party');
     if (fromVote === voting) throw new Error("You can't vote for yourself");
     const c = this.game.playerVote(fromVote, voting);
     if (c >= this.players.length + 1) {

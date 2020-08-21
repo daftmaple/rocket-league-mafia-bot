@@ -45,9 +45,21 @@ client.on('message', async (message: Discord.Message) => {
           message.channel.send('There is no ongoing party in this channel');
         else if (party.ongoingGame())
           message.channel.send('There is an ongoing game');
-        else if (!party.isLeader(currentPlayer) && !party.cancellable())
+        else if (
+          !party.isLeader(currentPlayer) &&
+          message.member?.hasPermission('ADMINISTRATOR')
+        ) {
+          if (cmds[1] !== '-f') {
+            message.channel.send(
+              `<@${message.author.id}> To cancel currently running party as administrator, use \`${prefix}cancel -f\``
+            );
+          } else {
+            partyMap.delete(channel);
+            message.channel.send('Party has been disbanded forcefully');
+          }
+        } else if (!party.isLeader(currentPlayer) && !party.cancellable())
           message.channel.send(
-            'User is not the party leader and last action (game/join/leave) was less than 15 minutes ago'
+            'User is not the party leader and last action (game/join/leave) was less than 10 minutes ago'
           );
         else {
           partyMap.delete(channel);
@@ -341,7 +353,7 @@ client.on('message', async (message: Discord.Message) => {
         const embed = new Discord.MessageEmbed();
         const allcmds = [
           'create',
-          'cancel',
+          'cancel (-f for force cancel, server admin only)',
           'join',
           'leave',
           'players',
@@ -368,6 +380,11 @@ client.on('message', async (message: Discord.Message) => {
           `Current version: ${process.env.npm_package_version}`
         );
         break;
+      case 'invite':
+        message.channel.send(
+          'Invite for this bot is disabled. Please ask bot operator for invite.'
+        );
+        break;
       default:
         return;
     }
@@ -387,7 +404,7 @@ client.on('ready', () => {
     client.user.setPresence({
       activity: {
         name: `${prefix}help | version ${process.env.npm_package_version}`,
-        type: 'LISTENING',
+        type: 'PLAYING',
       },
     });
 });
