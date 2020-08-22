@@ -1,5 +1,6 @@
 import Discord from 'discord.js';
 import moment from 'moment';
+import { Repository } from './ignore/repository';
 
 export type GameResult = {
   players: Map<Player, number>;
@@ -15,7 +16,7 @@ export class Party {
   private callback: EndgameCallback | null;
   private lastAction: Date;
 
-  constructor(channel: string, leader: Player) {
+  constructor(leader: Player) {
     this.players = [];
     this.leader = leader;
     this.game = null;
@@ -365,3 +366,17 @@ export class PlayerMap {
     return this.players;
   }
 }
+
+export class MessageError extends Error {
+  constructor(m: string) {
+    super(m);
+    Object.setPrototypeOf(this, MessageError.prototype);
+  }
+}
+
+export type MessageFunction = (
+  message: Discord.Message,
+  repo: Repository,
+  cmds: string[],
+  client: Discord.Client
+) => void;
