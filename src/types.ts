@@ -1,6 +1,6 @@
 import Discord from 'discord.js';
 import moment from 'moment';
-import { Repository } from './ignore/repository';
+import { Repository } from './repository';
 
 export type GameResult = {
   players: Map<Player, number>;
@@ -343,27 +343,6 @@ export class Player {
 
   getPoints() {
     return this.points;
-  }
-}
-
-export class PlayerMap {
-  private players: Map<string, Player>;
-  constructor() {
-    this.players = new Map();
-  }
-
-  addOrFindPlayer(user: Discord.User) {
-    if (this.players.has(user.id)) {
-      return this.players.get(user.id)!;
-    } else {
-      const p = new Player(user);
-      this.players.set(user.id, p);
-      return p;
-    }
-  }
-
-  getPlayers() {
-    return this.players;
   }
 }
 

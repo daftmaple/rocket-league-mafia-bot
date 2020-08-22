@@ -4,7 +4,7 @@ dotenv.config();
 
 import Discord from 'discord.js';
 import { MessageError } from './types';
-import { Repository } from './ignore/repository';
+import { Repository } from './repository';
 import { commandMap } from './handler';
 
 const prefix = process.env.BOT_PREFIX || 'm!';

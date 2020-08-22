@@ -1,6 +1,6 @@
 import Discord from 'discord.js';
 import { MessageFunction, MessageError, Player } from './types';
-import { Repository } from './ignore/repository';
+import { Repository } from './repository';
 
 const prefix = process.env.BOT_PREFIX || 'm!';
 const botAdmins = (process.env.BOT_ADMIN || '').split(',');
