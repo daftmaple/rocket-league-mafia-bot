@@ -27,7 +27,7 @@ export class Repository {
   };
 
   newParty = (channelId: Discord.Snowflake, leader: Player): void => {
-    if (!!this._partyMap.get(channelId))
+    if (this._partyMap.get(channelId))
       throw new MessageError('Party is already set for this channel');
     this._partyMap.set(channelId, new Party(leader));
   };
@@ -46,8 +46,9 @@ class PlayerMap {
   }
 
   addOrFindPlayer = (user: Discord.User): Player => {
-    if (this.players.has(user.id)) {
-      return this.players.get(user.id)!;
+    const player = this.players.get(user.id);
+    if (player) {
+      return player;
     } else {
       const p = new Player(user);
       this.players.set(user.id, p);

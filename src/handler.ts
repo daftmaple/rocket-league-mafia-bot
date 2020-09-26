@@ -5,12 +5,6 @@ import { Repository } from './repository';
 const prefix = process.env.BOT_PREFIX || 'm!';
 const botAdmins = (process.env.BOT_ADMIN || '').split(',');
 
-const sleep = (ms: number): Promise<unknown> => {
-  return new Promise((resolve) => {
-    setTimeout(resolve, ms);
-  });
-};
-
 const mention = (player: Player, message: string): string => {
   return `<@${player.discordUser().id}> ${message}`;
 };
@@ -106,7 +100,7 @@ const create = (message: Discord.Message, repo: Repository): void => {
   const party = repo.getParty(channelId);
   const player = repo.getPlayer(message.author);
 
-  if (!!party) {
+  if (party) {
     message.channel.send('There is an ongoing party in this channel');
     return;
   }

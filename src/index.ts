@@ -8,6 +8,11 @@ import { Repository } from './repository';
 import { commandMap } from './handler';
 
 const prefix = process.env.BOT_PREFIX || 'm!';
+const token = process.env.BOT_TOKEN;
+
+if (!token) {
+  throw new Error('Token is not found');
+}
 
 const client: Discord.Client = new Discord.Client({
   retryLimit: 3,
@@ -26,7 +31,7 @@ client.on('message', async (message: Discord.Message) => {
 
     const functionHandler = commandMap.get(cmds[0]);
 
-    if (!!functionHandler) {
+    if (functionHandler) {
       try {
         functionHandler(message, repo, cmds, client);
       } catch (e) {
@@ -37,7 +42,7 @@ client.on('message', async (message: Discord.Message) => {
   }
 });
 
-client.login(process.env.BOT_TOKEN!);
+client.login(token);
 
 client.on('ready', () => {
   if (client.user)

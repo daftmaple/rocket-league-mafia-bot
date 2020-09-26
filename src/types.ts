@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-non-null-assertion */
 import Discord from 'discord.js';
 import moment from 'moment';
 import { Repository } from './repository';
@@ -223,7 +224,7 @@ class Game {
       // Else (!player in teamMafia) and winnerIndex !== mafiaIndex, set point to 1 otherwise 0
       players_points.set(
         it,
-        !!this.teamMafia.find((player) => player === it)
+        this.teamMafia.find((player) => player === it)
           ? this.winnerIndex === this.mafiaIndex
             ? 1
             : 0
@@ -260,7 +261,7 @@ class Game {
     return this.userNameList;
   }
 
-  private shuffleArray(array: any) {
+  private shuffleArray<T>(array: T[]): void {
     for (let i = array.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
       [array[i], array[j]] = [array[j], array[i]];
