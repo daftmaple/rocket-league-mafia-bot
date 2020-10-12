@@ -2,7 +2,7 @@
   "name": "rocket-league-mafia-bot",
   "version": "1.2.5",
   "main": "index.js",
-  "license": "MIT",
+  "license": "WTFPL",
   "scripts": {
     "start": "node build/index.js",
     "watch": "yarn tsc --watch",
