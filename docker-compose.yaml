@@ -1,0 +1,10 @@
+version: '3'
+
+services:
+  rl-mafia-bot:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: rl-mafia-bot
+    container_name: rl-mafia-bot
+    env_file: .env

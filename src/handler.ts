@@ -2,8 +2,8 @@ import Discord from 'discord.js';
 import { MessageFunction, MessageError, Player } from './types';
 import { Repository } from './repository';
 
-const prefix = process.env.BOT_PREFIX || 'm!';
-const botAdmins = (process.env.BOT_ADMIN || '').split(',');
+const prefix = process.env.BOT_PREFIX?.replace(`'`, '') || 'm!';
+const botAdmins = (process.env.BOT_ADMIN?.replace(`'`, '') || '').split(',');
 
 const mention = (player: Player, message: string): string => {
   return `<@${player.discordUser().id}> ${message}`;
@@ -14,7 +14,11 @@ const changelog: MessageFunction = (message: Discord.Message): void => {
   embed.setTitle('Recent changelogs');
   embed.addFields([
     {
-      name: 'Version 1.2.4',
+      name: 'Version 1.2.6',
+      value: 'Added Docker support',
+    },
+    {
+      name: 'Version 1.2.4 - 1.2.5',
       value: `Internal structure change to support future extensibility`,
     },
     {
@@ -22,15 +26,15 @@ const changelog: MessageFunction = (message: Discord.Message): void => {
       value: `Internal minor bugfix where game doesn't end after 60 seconds`,
     },
     {
+      name: 'Version 1.2.2',
+      value: `Internal minor bugfix where party leader can't vote`,
+    },
+    {
       name: 'Version 1.2.1',
       value: `
             - As server admin, you can cancel party forcefully using -f option
             - Bugfix where someone can vote without being in the party
             `,
-    },
-    {
-      name: 'Version 1.2.2',
-      value: `Internal minor bugfix where party leader can't vote`,
     },
     {
       name: 'Version 1.2.0',

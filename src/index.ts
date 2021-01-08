@@ -7,11 +7,12 @@ import { MessageError } from './types';
 import { Repository } from './repository';
 import { commandMap } from './handler';
 
-const prefix = process.env.BOT_PREFIX || 'm!';
-const token = process.env.BOT_TOKEN;
+const prefix = process.env.BOT_PREFIX?.replace(`'`, '') || 'm!';
+const token = process.env.BOT_TOKEN?.replace(`'`, '');
 
 if (!token) {
-  throw new Error('Token is not found');
+  console.error('Token is not found');
+  process.exit(1);
 }
 
 const client: Discord.Client = new Discord.Client({
@@ -52,4 +53,9 @@ client.on('ready', () => {
         type: 'PLAYING',
       },
     });
+});
+
+process.on('SIGTERM', () => {
+  console.log('Terminating app');
+  client.destroy();
 });

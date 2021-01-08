@@ -13,8 +13,27 @@ Things to upgrade:
 Since npm package number can only be parsed when running npm script, use this command:
 
 ```sh
-pm2 start npm --name "mafiabot" -- start
+pm2 start npm --name "rlmafiabot" -- start
 ```
+
+## To start the bot with docker composer
+
+```sh
+docker-compose up --build --detach
+```
+
+## To start the bot with docker (normal)
+
+```sh
+docker build -t rl-mafia-bot .
+docker run --detach --env-file ./.env --name rlmafiabot-container rl-mafia-bot
+```
+
+Note: Docker **doesn't** ignore quotes on `.env` file
+
+## Terminating bot
+
+Issue `SIGTERM` to whatever runs the bot.
 
 ## How it works
 

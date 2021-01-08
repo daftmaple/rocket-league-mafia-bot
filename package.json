@@ -1,6 +1,6 @@
 {
   "name": "rocket-league-mafia-bot",
-  "version": "1.2.5",
+  "version": "1.2.6",
   "main": "index.js",
   "license": "WTFPL",
   "scripts": {
