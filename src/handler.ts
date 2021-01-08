@@ -2,8 +2,8 @@ import Discord from 'discord.js';
 import { MessageFunction, MessageError, Player } from './types';
 import { Repository } from './repository';
 
-const prefix = process.env.BOT_PREFIX?.replace(`'`, '') || 'm!';
-const botAdmins = (process.env.BOT_ADMIN?.replace(`'`, '') || '').split(',');
+const prefix = process.env.BOT_PREFIX || 'm!';
+const botAdmins = (process.env.BOT_ADMIN || '').split(',');
 
 const mention = (player: Player, message: string): string => {
   return `<@${player.discordUser().id}> ${message}`;
@@ -13,6 +13,10 @@ const changelog: MessageFunction = (message: Discord.Message): void => {
   const embed = new Discord.MessageEmbed();
   embed.setTitle('Recent changelogs');
   embed.addFields([
+    {
+      name: 'Version 1.2.7',
+      value: 'Bugfix to remove quotes on environment variables processing',
+    },
     {
       name: 'Version 1.2.6',
       value: 'Added Docker support',

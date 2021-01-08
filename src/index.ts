@@ -7,8 +7,8 @@ import { MessageError } from './types';
 import { Repository } from './repository';
 import { commandMap } from './handler';
 
-const prefix = process.env.BOT_PREFIX?.replace(`'`, '') || 'm!';
-const token = process.env.BOT_TOKEN?.replace(`'`, '');
+const prefix = process.env.BOT_PREFIX || 'm!';
+const token = process.env.BOT_TOKEN;
 
 if (!token) {
   console.error('Token is not found');

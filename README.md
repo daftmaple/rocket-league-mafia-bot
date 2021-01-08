@@ -29,7 +29,7 @@ docker build -t rl-mafia-bot .
 docker run --detach --env-file ./.env --name rlmafiabot-container rl-mafia-bot
 ```
 
-Note: Docker **doesn't** ignore quotes on `.env` file
+Note: Docker **doesn't** ignore quotes (both `'` and `"`) on `.env` file
 
 ## Terminating bot
 
