@@ -55,7 +55,16 @@ client.on('ready', () => {
     });
 });
 
-process.on('SIGTERM', () => {
-  console.log('Terminating app');
+function signalHandler(signal: string) {
+  console.log(`${signal}: Terminating app`);
   client.destroy();
-});
+}
+
+function exitHandler(code: number) {
+  console.log(`Automated app termination with code: ${code}`);
+  client.destroy();
+}
+
+process.on('exit', exitHandler);
+process.on('SIGINT', signalHandler);
+process.on('SIGTERM', signalHandler);

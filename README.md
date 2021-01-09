@@ -33,7 +33,7 @@ Note: Docker **doesn't** ignore quotes (both `'` and `"`) on `.env` file
 
 ## Terminating bot
 
-Issue `SIGTERM` to whatever runs the bot.
+Issue `SIGTERM` to whatever runs the bot. In Docker, this is equivalent to `docker stop rlmafiabot-container`.
 
 ## How it works
 

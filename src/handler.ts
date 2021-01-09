@@ -14,6 +14,10 @@ const changelog: MessageFunction = (message: Discord.Message): void => {
   embed.setTitle('Recent changelogs');
   embed.addFields([
     {
+      name: 'Version 1.2.8',
+      value: 'Added signal/exit handling for client graceful disconnect',
+    },
+    {
       name: 'Version 1.2.7',
       value: 'Bugfix to remove quotes on environment variables processing',
     },
