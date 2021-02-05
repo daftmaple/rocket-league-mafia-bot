@@ -1,5 +1,5 @@
 # Set node version
-FROM node:14
+FROM node:14-alpine
 
 # App directory
 WORKDIR /usr/src
