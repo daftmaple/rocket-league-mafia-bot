@@ -8,3 +8,4 @@ services:
     image: rl-mafia-bot
     container_name: rl-mafia-bot
     env_file: .env
+    restart: unless-stopped
