@@ -1,14 +1,14 @@
-# Set node version
-FROM node:14-alpine
-
-# App directory
+# Build stage
+FROM node:14-alpine AS ts-build-stage
 WORKDIR /usr/src
-COPY package.json .
-RUN npm install
-
-# Copy all and build ts files
 COPY . .
+RUN npm install
 RUN npm run build
 
-# Run app
+# Prod stage
+FROM node:14-alpine AS ts-prod-stage
+WORKDIR /usr/src
+COPY --from=ts-build-stage ./usr/src/build ./build
+COPY package* ./
+RUN npm install --production
 CMD ["npm", "start"]
